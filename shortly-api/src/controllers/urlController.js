@@ -9,7 +9,7 @@ export async function createUrl(req, res) {
   const token = authorization.replace("Bearer ", "");
 
   try {
-    const { rows } = await connection.query(
+    const users = await connection.query(
       `
             SELECT "userId" FROM sessions WHERE token=$1
         `,
@@ -19,7 +19,7 @@ export async function createUrl(req, res) {
     if (userSchema.rowCount === 0) {
       return res.sendStatus(404);
     }
-    const { userId } = rows[0];
+    const { userId } = users.rows[0];
 
     const shortUrl = uuid().split("-")[0];
     await connection.query(
@@ -60,17 +60,26 @@ export async function getUrl(req, res) {
 
 export async function deleteUrl(req, res) {
   const { id } = req.params;
+  const authorization = req.headers.authorization;
+  const token = authorization?.replace("Bearer ", "");
 
   try {
-    const selected = await connection.query(
-      "SELECT id FROM shortUrl WHERE id=$1",
-      [id]
+    const users = await connection.query(
+      'SELECT "userId" FROM sessions WHERE token=$1',
+      [token]
     );
-    if (selected.rowCount === 0) {
-      return res.sendStatus(401);
+    const { userId } = users.rows[0];
+
+    const url = await connection.query(
+      `SELECT id FROM "shortUrls" WHERE id=$1 AND "userId"=$2`,
+      [token]
+    );
+
+    if (url.rowCount === 0) {
+      return res.sendStatus(404);
     }
 
-    await connection.query("DELETE shortUrl WHERE id=$1", [id]);
+    await connection.query(`DELETE FROM "shortUrl" WHERE id=$1`, [id]);
     res.sendStatus(204);
   } catch (error) {
     res.sendStatus(500).send(error);
