@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createUrl, getUrl } from "../controllers/urlController.js";
+import { createUrl, getUrl, deleteUrl } from "../controllers/urlController.js";
 import { validateSchemaMiddleware } from "../middlewares/validateSchemaMiddleware.js";
 import { validateTokenMiddleware } from "../middlewares/validateTokenMiddleware.js";
 import urlSchema from "../schemas/urlSchema.js";
@@ -12,4 +12,5 @@ urlRouter.post(
   createUrl
 );
 urlRouter.get("/url/:shortUrl", validateTokenMiddleware, getUrl);
+urlRouter.delete("/urls/:id", validateTokenMiddleware, deleteUrl);
 export default urlRouter;

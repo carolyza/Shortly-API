@@ -57,3 +57,22 @@ export async function getUrl(req, res) {
     res.status(500).send(error);
   }
 }
+
+export async function deleteUrl(req, res) {
+  const { id } = req.params;
+
+  try {
+    const selected = await connection.query(
+      "SELECT id FROM shortUrl WHERE id=$1",
+      [id]
+    );
+    if (selected.rowCount === 0) {
+      return res.sendStatus(401);
+    }
+
+    await connection.query("DELETE shortUrl WHERE id=$1", [id]);
+    res.sendStatus(204);
+  } catch (error) {
+    res.sendStatus(500).send(error);
+  }
+}
