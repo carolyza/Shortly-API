@@ -34,15 +34,6 @@ export async function createUrl(req, res) {
 
 export async function getUrl(req, res) {
   const { shortUrl } = req.params;
-  let offset = "";
-  let limit = "";
-
-  if (req.query.offset) {
-    offset = req.query.offset;
-  }
-  if (req.query.limit) {
-    limit = req.query.limit;
-  }
 
   try {
     const result = await connection.query(
@@ -52,6 +43,18 @@ export async function getUrl(req, res) {
     if (result.rowCount === 0) {
       return res.sendStatus(404);
     }
+
+    const { rows } = await connection.query(
+      'UPDATE "visitCount" FROM "shortUrls" WHERE "shortUrl"=$1',
+      [shortUrl]
+    );
+
+    const count = rows[0].visitcount++;
+
+    await connection.query(
+      'UPDATE "shortUrls" set "visitCount"=$1 WHERE "shortUrl"=$2',
+      [count, shortUrl]
+    );
     res.status(200).send(result.rows[0]);
   } catch (error) {
     res.status(500).send(error);
